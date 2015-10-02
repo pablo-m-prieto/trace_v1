@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
+import trace.input.Input;
+import trace.input.OnlineBuffer;
 
 /**
  *
@@ -19,23 +21,24 @@ import javax.swing.table.TableModel;
 public class TableModelOutput extends Output implements TableModel {
 
     ArrayList<TableModelListener> listeners = new ArrayList<>();
-    ArrayList<String> colNames = new ArrayList<>();
-    ArrayList<DataSet> datas = new ArrayList<>();
+
+    OnlineBuffer buffer = new OnlineBuffer();
+
+    public TableModelOutput(Input input) {
+        input.addListener(buffer);
+        input.addListener(this);
+    }
 
     @Override
     public void newEvent(InputEvent event) {
         switch (event.type) {
             case WELCOME_STRUCTURE:
             case STRUCTURE_CHANGED:
-                colNames.clear();
-                colNames.addAll((ArrayList<String>) event.data);
-                datas.clear();
                 fireEvent(new TableModelEvent(this, TableModelEvent.ALL_COLUMNS));
                 break;
             case WELCOME_DATA:
             case NEW_DATA:
-                datas.add((DataSet) event.data);
-                fireEvent(new TableModelEvent(this, datas.size()));
+                fireEvent(new TableModelEvent(this, TableModelEvent.UPDATE));
                 break;
         }
     }

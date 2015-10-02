@@ -25,6 +25,14 @@ public class NamedDataSet extends DataSet {
         this.addAll(data);
     }
 
+    public synchronized boolean addData(NamedDataSet set) {
+        if (this.name.equals(set.name)) {
+            return super.addData(set);
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
     /**
      * @return the set
      */

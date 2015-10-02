@@ -29,13 +29,7 @@ public class PrintStreamOutput extends Output {
 
     @Override
     public void newEvent(InputEvent event) {
-        switch (event.type) {
-            case WELCOME_STRUCTURE:
-            case WELCOME_DATA:
-            case NEW_DATA:
-            case STRUCTURE_CHANGED:
-                stream.println(event);
-        }
+        stream.println(event);
     }
 
 }

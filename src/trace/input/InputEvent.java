@@ -50,7 +50,11 @@ public class InputEvent {
         /**
          * EOF
          */
-        SOURCE_EOF;
+        SOURCE_EOF,
+        /**
+         * Error en los datos de entrada
+         */
+        DATA_INPUT_ERROR;
     }
 
     public final EnumEventType type;

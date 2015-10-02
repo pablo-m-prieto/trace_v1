@@ -50,6 +50,10 @@ public class DataSet extends TreeSet<Data> {
         return new DataSet(this.subSet(new Data(from, null), fromInclusive, new Data(to, null), toInclusive));
     }
 
+    public synchronized boolean addData(DataSet set) {
+        return this.addAll(set);
+    }
+
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();

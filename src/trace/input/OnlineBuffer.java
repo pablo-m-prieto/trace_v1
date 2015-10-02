@@ -17,6 +17,7 @@ import trace.data.NamedDataSet;
 public class OnlineBuffer extends Input implements InputListener {
 
     DataMap data = new DataMap();
+    InputState state = InputState.RUNNING;
 
     @Override
     public synchronized void addListener(InputListener listener) {
@@ -31,33 +32,74 @@ public class OnlineBuffer extends Input implements InputListener {
 
     @Override
     public void newEvent(InputEvent event) {
-        switch (event.type) {
-            case WELCOME_DATA:
-                if (event.data instanceof Data) {
-                    data.add(new NamedDataSet(null, new DataSet(new Data[](event.data))));
-                }
-                data.add(event.data);
-                fireListener(event);
-                break;
-            default:
-                fireListener(event);
-                break;
+        if (state == InputState.RUNNING) {
+            switch (event.type) {
+                case WELCOME_DATA:
+                    if ((event.data instanceof Data) || (event.data instanceof DataSet)) {
+                        fireListener(new InputEvent(InputEvent.EnumEventType.DATA_INPUT_ERROR, event.data, this));
+                    }
+                    if (event.data instanceof NamedDataSet) {
+                        NamedDataSet set = data.getData(((NamedDataSet) event.data).name);
+                        if (set == null) {
+                            data.add(set);
+                            fireListener(new InputEvent(InputEvent.EnumEventType.STRUCTURE_CHANGED, data, this));
+                        } else {
+                            set.addData((NamedDataSet) event.data);
+                            fireListener(new InputEvent(InputEvent.EnumEventType.NEW_DATA, event.data, this));
+                        }
+                    }
+                    if (event.data instanceof DataMap) {
+                        boolean newSet = false;
+                        boolean newData = false;
+                        for (NamedDataSet nds : (DataMap) event.data) {
+                            NamedDataSet set = data.getData(nds.name);
+                            if (set == null) {
+                                data.add(set);
+                                newSet = true;
+                                newData = true;
+                            } else {
+                                set.addData(nds);
+                                newData = true;
+                            }
+                        }
+                        if (newSet) {
+                            fireListener(new InputEvent(InputEvent.EnumEventType.STRUCTURE_CHANGED, data, this));
+                        } else {
+                            if (newData) {
+                                fireListener(new InputEvent(InputEvent.EnumEventType.NEW_DATA, event.data, this));
+                            }
+                        }
+                    }
+                    break;
+                default:
+                    fireListener(event);
+                    break;
+            }
         }
     }
 
     @Override
     public void setCommand(InputCommand command) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        switch (command) {
+            case START:
+                state = InputState.RUNNING;
+                fireListener(new InputEvent(InputEvent.EnumEventType.INPUT_RUNNING, this));
+                break;
+            case STOP:
+                state = InputState.STOPPED;
+                fireListener(new InputEvent(InputEvent.EnumEventType.INPUT_STOPPED, this));
+                break;
+        }
     }
 
     @Override
     public void startCommand() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.setCommand(InputCommand.START);
     }
 
     @Override
     public void stopCommand() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.setCommand(InputCommand.STOP);
     }
 
 }
